@@ -6,3 +6,4 @@ redis
 bitnami/kafka:2.8.1
 openjdk:8u342-jdk
 #--platform=linux/arm64 xiaoyaliu/alist
+nginx:1.25.5
