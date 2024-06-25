@@ -58,8 +58,11 @@ jobs:
         image_info="${{ github.event.inputs.image_info }}"
         echo "Processing image: $image_info"
         docker pull $image_info
+        echo "pull finish"
         namespace=$(echo "$image_info" | awk -F'/' '{print $1}')
+        echo "$namespace"
         image_name_tag=$(echo "$image_info" | awk -F'/' '{print $2}')
+        echo "$image_name"
         new_image="$ALIYUN_REGISTRY/$ALIYUN_NAME_SPACE/$namespace_$image_name_tag"
         docker tag $image_info $new_image
         docker push $new_image
