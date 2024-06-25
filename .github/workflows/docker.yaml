@@ -63,7 +63,7 @@ jobs:
         echo "$namespace"
         image_name_tag=$(echo "$image_info" | awk -F'/' '{print $2}')
         echo "$image_name"
-        new_image="$ALIYUN_REGISTRY/$ALIYUN_NAME_SPACE/$namespace_$image_name_tag"
+        new_image="$ALIYUN_REGISTRY/$ALIYUN_NAME_SPACE/${namespace}_${image_name_tag}"
         docker tag $image_info $new_image
         docker push $new_image
         docker rmi $image_info
