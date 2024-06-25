@@ -61,12 +61,7 @@ jobs:
         echo "pull finish"
         namespace=$(echo "$image_info" | awk -F'/' '{print $1}')
         echo "this is namespase: $namespace"
-        image_name_tag=$(echo "$image_info" | awk -F'/' '{print $2}')
-        echo "this is image_name_tag: $image_name_tag"
-        # 删除末尾可能的下划线
-        image_name_tag="${image_name_tag%_}"
-        echo "this is image_name_tag2: image_name_tag"
-        new_image="$ALIYUN_REGISTRY/$ALIYUN_NAME_SPACE/${namespace}_${image_name_tag}"
+        new_image="$ALIYUN_REGISTRY/$ALIYUN_NAME_SPACE/${namespace}"
         echo "this is new name: $new_image"
         echo "this is re-tag:"
         docker tag $image_info $new_image
