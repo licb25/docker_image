@@ -1,6 +1,5 @@
 
 #支持私库
-sheepkiller/kafka-manager:latest
-bitnami/kafka:3.5.1
+docker.redpanda.com/redpandadata/console:latest
 #--platform=linux/arm64 xiaoyaliu/alist
 
