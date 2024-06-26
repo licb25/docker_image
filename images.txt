@@ -1,6 +1,6 @@
 
 #支持私库
-hlebalbau/cmak:latest
+sheepkiller/kafka-manager:latest
 bitnami/kafka:3.5.1
 #--platform=linux/arm64 xiaoyaliu/alist
 
