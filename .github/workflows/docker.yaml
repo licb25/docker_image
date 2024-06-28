@@ -1,29 +1,73 @@
-name: Docker Image Build
+name: Docker
 
 on:
-  push:
-    branches:
-      - main
-  workflow_dispatch:  # 添加这个触发器
+  workflow_dispatch:
     inputs:
-      image_name:   # 定义输入参数
-        description: 'Docker image name'
+      image_info:
+        description: 'Docker image information'
         required: true
-        default: 'nginx:latest'
+  push:
+    branches: [ main ]
+
+env:
+  ALIYUN_REGISTRY: "${{ secrets.ALIYUN_REGISTRY }}"
+  ALIYUN_NAME_SPACE: "${{ secrets.ALIYUN_NAME_SPACE }}"
+  ALIYUN_REGISTRY_USER: "${{ secrets.ALIYUN_REGISTRY_USER }}"
+  ALIYUN_REGISTRY_PASSWORD: "${{ secrets.ALIYUN_REGISTRY_PASSWORD }}"
 
 jobs:
   build:
+    name: Pull
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
-
-    - name: Build Docker image
-      run: docker build -t ${{ github.repository }}:${{ github.event.inputs.image_name }} .
-
-    - name: Push Docker image
+    - name: Before freeing up disk space
       run: |
-        echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
-        docker tag ${{ github.repository }}:${{ github.event.inputs.image_name }} ghcr.io/${{ github.repository_owner }}/${{ github.repository }}:${{ github.event.inputs.image_name }}
-        docker push ghcr.io/${{ github.repository_owner }}/${{ github.repository }}:${{ github.event.inputs.image_name }}
+        echo "Before freeing up disk space"
+        echo "=============================================================================="
+        df -hT
+        echo "=============================================================================="
+
+    - name: Maximize build space
+      uses: easimon/maximize-build-space@master
+      with:
+        root-reserve-mb: 2048
+        swap-size-mb: 128
+        remove-dotnet: 'true'
+        remove-haskell: 'true'
+        build-mount-path: '/var/lib/docker/'
+
+    - name: Restart docker
+      run: sudo service docker restart
+
+    - name: Free up disk space complete
+      run: |
+        echo "Free up disk space complete"
+        echo "=============================================================================="
+        df -hT
+        echo "=============================================================================="
+
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Docker Setup Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build and push image Aliyun
+      run: |
+        docker login -u $ALIYUN_REGISTRY_USER -p $ALIYUN_REGISTRY_PASSWORD $ALIYUN_REGISTRY
+        image_info="${{ github.event.inputs.image_info }}"
+        echo "Processing image: $image_info"
+        docker pull $image_info
+        echo "pull finish"
+        namespace=$(echo "$image_info" | awk -F'/' '{print $1}')
+        echo "this is namespace: $namespace"
+        new_image="$ALIYUN_REGISTRY/$ALIYUN_NAME_SPACE/${namespace}"
+        echo "this is new name: $new_image"
+        echo "this is re-tag:"
+        docker tag $image_info $new_image
+        echo "this is pushing:"
+        docker push $new_image
+        echo "this is rmi image_info"
+        docker rmi $image_info
+        echo "this is rmi new_image"
+        docker rmi $new_image
