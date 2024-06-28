@@ -1,35 +1,24 @@
-name: Build and Upload Docker Image
+name: Docker Image Build
 
 on:
-  repository_dispatch:
-    types: [trigger-build-and-upload]
+  push:
+    branches:
+      - main
+  workflow_dispatch:  # 添加这个触发器
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
+    - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v1
+    - name: Build Docker image
+      run: docker build -t ${{ github.repository }}:${{ github.sha }} .
 
-    - name: Login to DockerHub
-      run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
-
-    - name: Build and push Docker image
+    - name: Push Docker image
       run: |
-        IMAGE_NAME=${{ github.event.client_payload.image_name }}
-        docker build -t your_dockerhub_username/$IMAGE_NAME .
-        docker push your_dockerhub_username/$IMAGE_NAME
-
-    - name: Login to Aliyun
-      run: |
-        docker login --username=${{ secrets.ALIYUN_USERNAME }} --password=${{ secrets.ALIYUN_PASSWORD }} registry.cn-shanghai.aliyuncs.com
-
-    - name: Tag and push to Aliyun
-      run: |
-        IMAGE_NAME=${{ github.event.client_payload.image_name }}
-        docker tag your_dockerhub_username/$IMAGE_NAME registry.cn-shanghai.aliyuncs.com/your_aliyun_repo/$IMAGE_NAME
-        docker push registry.cn-shanghai.aliyuncs.com/your_aliyun_repo/$IMAGE_NAME
+        echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
+        docker tag ${{ github.repository }}:${{ github.sha }} ghcr.io/${{ github.repository_owner }}/${{ github.repository }}:${{ github.sha }}
+        docker push ghcr.io/${{ github.repository_owner }}/${{ github.repository }}:${{ github.sha }}
